@@ -265,6 +265,9 @@ LevelEndAnimations:
 
 ;; Player dies
 PlayerDies:
+
+        call PlayerDeathAnimation
+
         ld a, (LAST_NONDRAWING_X)
         ld (PLAYER_X), a
         ld a, (LAST_NONDRAWING_Y)
@@ -280,8 +283,8 @@ PlayerDies:
         dec a
         ld (LIVES), a
 
-        ld hl, SOUND_SHORT_HIGHER_THUD
-        call PlaySound
+        ;ld hl, SOUND_SHORT_HIGHER_THUD
+        ;call PlaySound
 
         call UpdateLives
 
@@ -290,6 +293,9 @@ PlayerDies:
         call RemoveUnfinishedLineVRAM
         ;call RepaintVRAM
         call RenderMainSprites
+
+        ld b, 50 ;; Delay of one second before resuming.
+        call DelayBFrames
 
         ;; Delay as we clear the drawing part of memory
         ld bc, 24*22*8 -2
@@ -316,6 +322,60 @@ PlayerDies:
         ld a, STATE_MENU
         ld (GAME_STATE), a
         ret
+
+PlayerDeathAnimation:
+		ld a, SPRITE_PLAYER_DYING_1 ;; Pattern
+		ld (SPRITE_VALS + 2), a
+		ld a, 1
+		call CALATR
+		ld (TEMP_WORD), hl
+		ex de, hl
+		ld a, 8 ;; Colour
+		ld (SPRITE_VALS + 3), a
+		ld a, (PLAYER_Y)
+		ld (SPRITE_VALS), a
+		ld a, (PLAYER_X)
+		ld (SPRITE_VALS + 1), a
+		ld hl, SPRITE_VALS
+		ld bc, 4
+		call LDIRVM
+
+        ld hl, SOUND_SHORT_HIGHER_THUD
+        call PlaySound
+        ld b, 10
+        call DelayBFrames
+
+        ld a, SPRITE_PLAYER_DYING_2
+        ld (SPRITE_VALS + 2), a
+        ld hl, (TEMP_WORD)
+        ld de, SPRITE_VALS
+        ex de, hl
+        ld bc, 4
+        call LDIRVM
+
+        ld b, 10
+        call DelayBFrames
+
+        ld a, SPRITE_PLAYER_DYING_3
+        ld (SPRITE_VALS + 2), a
+        ld hl, (TEMP_WORD)
+        ld de, SPRITE_VALS
+        ex de, hl
+        ld bc, 4
+        call LDIRVM
+
+        ld b, 10
+        call DelayBFrames
+
+        ld a, SPRITE_EMPTY
+        ld (SPRITE_VALS + 2), a
+        ld hl, (TEMP_WORD)
+        ld de, SPRITE_VALS
+        ex de, hl
+        ld bc, 4
+        call LDIRVM
+        ret
+
 
 
 ResetTracers:
@@ -345,6 +405,8 @@ ResetTracers:
         cp ENEMY_STATE_NOT_ACTIVE
         ret z
         call TracerActions.despawnOver
+        ld a, 255
+        ld (ix + 4), a
         ret
 
 
@@ -570,7 +632,7 @@ INIT_TRACERS:
     DB DIR_SOUTH ;; +2: DIR
     DB ENEMY_STATE_TRACING ;; +3: STATE
     DB 0 ;; +4: DELAY
-    DB 10 ;;  +5: ROTATION DIRECTION (0=CW, 1=CCW)
+    DB 0 ;;  +5: ROTATION DIRECTION (0=CW, 1=CCW)
 
     DB 0 ;; +1: X
     DB 3*22*8/4 ;; +0: Y
@@ -584,7 +646,7 @@ INIT_TRACERS:
     DB DIR_SOUTH ;; +2: DIR
     DB ENEMY_STATE_TRACING ;; +3: STATE
     DB 0 ;; +4: DELAY
-    DB 10 ;;  +5: ROTATION DIRECTION (0=CW, 1=CCW)
+    DB 0 ;;  +5: ROTATION DIRECTION (0=CW, 1=CCW)
 
 
 

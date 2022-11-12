@@ -430,7 +430,7 @@ LoadRLE2VRAM:
 	jp .loop
 
 
-_NO_OF_SPRITES: EQU 16
+_NO_OF_SPRITES: EQU 19
 SPRITE_GFX:
     INCBIN "incbin/sprites.bin"
 
